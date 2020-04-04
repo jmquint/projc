@@ -15,12 +15,9 @@ void print_page(const char *host);
 
 int main()
 {
-	const char text[]="salut";
-	size_t l=666;
+	size_t l=0;
 	//printf("test1");
-	build_query(text,&l);
 	const char h[]="example.com";
-	printf("td ");
 	print_page(h);
 	printf("tf ");
 }
@@ -41,15 +38,15 @@ void print_page(const char *host)
 	struct addrinfo *result, *rp;
 	int s, sfd;
 	const char port[]="80";
-	size_t len;
 	ssize_t nread;
-	char buf[1024];
+	char buf[8192];
+	size_t lenHost;
+	char *query=build_query(host,&lenHost);
 	errno=0;
-	printf("t1 ");
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family=AF_INET;
 	hints.ai_socktype=SOCK_STREAM;
-	printf("t2 ");
+	printf("t1 ");
 	if (getaddrinfo(host, port, &hints, &result)!=0)
 	{
 		printf("erreur getaddrinfo %d\n",getaddrinfo(host, port, &hints, &result));	//error getaddrinfo
@@ -84,14 +81,15 @@ void print_page(const char *host)
 	}
 	freeaddrinfo(result);
 
-	if (write(sfd, host, strlen(host)+1) == -1) {
+	if (write(sfd, query, lenHost) == -1) {
 		printf("Write error");
 		exit(EXIT_FAILURE);
 	}
-	nread = read(sfd, buf, 512);
+	nread = read(sfd, buf, 8192);
 	if (nread == -1) {
 		printf("Read erro");
 		exit(EXIT_FAILURE);
 	}
 	printf("Received %zd bytes: %s\n", nread, buf);
 }
+
