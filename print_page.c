@@ -13,15 +13,6 @@
 char *build_query(const char *host, size_t *len);
 void print_page(const char *host);
 
-int main()
-{
-	size_t l=0;
-	//printf("test1");
-	const char h[]="example.com";
-	print_page(h);
-	printf("tf ");
-}
-
 char *build_query(const char *host, size_t *len)
 {
 	char *p;
@@ -36,7 +27,8 @@ void print_page(const char *host)
 {
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
-	int s, sfd;
+	//int s, sfd;
+	int sfd;
 	const char port[]="80";
 	ssize_t nread;
 	char buf[8192];
