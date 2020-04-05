@@ -38,15 +38,21 @@ void print_page(const char *host)
 	hints.ai_socktype=SOCK_STREAM;
 	if (getaddrinfo(host, port, &hints, &result)!=0)
 	{
-		printf("erreur getaddrinfo %d\n",getaddrinfo(host, port, &hints, &result));	//error getaddrinfo
+
+		printf("problem getaddrinfo, host not found: %d\n",getaddrinfo(host, port, &hints, &result));	//error getaddrinfo
 		exit(EXIT_FAILURE);
 	}
 	for (rp = result; rp != NULL; rp = rp->ai_next) 
 	{
+		if (hints.ai_family!=AF_INET || hints.ai_socktype!=SOCK_STREAM)
+		{
+			printf("Host not compatible");
+			exit(1);
+		}
 		sfd = socket(rp->ai_family,rp->ai_socktype,0);
 		if (sfd == -1)
 		{
-			printf("socket problem %s, error number : %d\n",strerror(errno),errno);	//error with socket
+			printf("socket problem: %s, error number : %d\n",strerror(errno),errno);	//error with socket
 			continue;
 		}
 
@@ -57,15 +63,14 @@ void print_page(const char *host)
 		}
 		else
 		{
-			printf("Error connection");	//error with connection
+			printf("connection problem: %s, error number : %d\n",strerror(errno),errno);	//error with connection
 			exit(EXIT_FAILURE);
 		}
+
 		close(sfd);
+
 	}
-	if (rp == NULL) {               // no working address found
-		fprintf(stderr, "Could not connect\n");
-		exit(EXIT_FAILURE);
-	}
+	
 	freeaddrinfo(result);
 
 	if (write(sfd, query, lenHost) == -1) {
@@ -74,7 +79,7 @@ void print_page(const char *host)
 	}
 	nread = read(sfd, buf, 8192);
 	if (nread == -1) {
-		printf("Read erro");
+		printf("Read error");
 		exit(EXIT_FAILURE);
 	}
 	printf("Received %zd bytes: %s\n", nread, buf);
