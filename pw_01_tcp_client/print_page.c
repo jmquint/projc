@@ -32,6 +32,8 @@ void print_page(const char *host)
 	char buf[8192];
 	size_t lenHost;
 	char *query=build_query(host,&lenHost);
+ 	// int s;     
+    	// char addr[1024];
 	errno=0;
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family=AF_INET;
@@ -44,11 +46,20 @@ void print_page(const char *host)
 	}
 	for (rp = result; rp != NULL; rp = rp->ai_next) 
 	{
-		if (hints.ai_family!=AF_INET || hints.ai_socktype!=SOCK_STREAM)
-		{
-			printf("Host not compatible");
-			exit(1);
+
+
+		/* printf("flags: 0x%x\tfamily: %d\tsocktype: %d\tprotocol: %d\n",
+				rp->ai_flags,
+				rp->ai_family,
+				rp->ai_socktype,
+				rp->ai_protocol);
+		s = getnameinfo(rp->ai_addr, rp->ai_addrlen, addr, sizeof addr, NULL, 0, NI_NUMERICHOST);
+		if (s != 0) {
+			printf("getnameinfo error:%d\n", s);
+			continue;
 		}
+		printf("addr: %s\n", addr); */
+
 		sfd = socket(rp->ai_family,rp->ai_socktype,0);
 		if (sfd == -1)
 		{
@@ -67,10 +78,8 @@ void print_page(const char *host)
 			exit(EXIT_FAILURE);
 		}
 
-		close(sfd);
-
 	}
-	
+
 	freeaddrinfo(result);
 
 	if (write(sfd, query, lenHost) == -1) {
@@ -82,6 +91,7 @@ void print_page(const char *host)
 		printf("Read error");
 		exit(EXIT_FAILURE);
 	}
+	close(sfd);   // Close socket
 	printf("Received %zd bytes: %s\n", nread, buf);
 }
 
