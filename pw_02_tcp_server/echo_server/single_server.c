@@ -8,6 +8,7 @@
 
 int main(int argc, char** argv)
 {
+	int errno=1;	
 	if (argc != 2)
 		errx(EXIT_FAILURE, "Usage:\n"
 				"Arg 1 = Port number (e.g. 2048)");
@@ -33,8 +34,7 @@ int main(int argc, char** argv)
 	}
 	for (rp = result; rp != NULL; rp = rp->ai_next) 
 	{
-		if ((sfd = socket(rp->ai_family, rp->ai_socktype,
-						rp->ai_protocol)) == -1)
+		if ((sfd = socket(rp->ai_family, rp->ai_socktype,rp->ai_protocol)) == -1)
 			continue;
 
 		if (setsockopt(sfd, SOL_SOCKET,SO_REUSEADDR,&val,sizeof(1)) == -1)
@@ -54,16 +54,16 @@ int main(int argc, char** argv)
 		printf("bind error\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("waiting for connection...\n");
 	if (listen(sfd,5)!=0)
 	{
 		printf("listen error\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("listened");
+	printf("waiting for connection...\n");
 	if (accept(sfd,rp->ai_addr,&rp->ai_addrlen)<0)
 	{
-		printf("accept error\n");
+		printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
+		exit(EXIT_FAILURE);
 	}
 	printf("connected");
 	echo(STDIN_FILENO, STDOUT_FILENO);
