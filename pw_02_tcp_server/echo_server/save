@@ -9,8 +9,6 @@
 int main(int argc, char** argv)
 {
 	int c=0;
-	ssize_t nread;
-	char buf[1024];
 	int errno=1;	
 	if (argc != 2)
 		errx(EXIT_FAILURE, "Usage:\n"
@@ -19,6 +17,7 @@ int main(int argc, char** argv)
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	int sfd,newsock;
+	struct sockaddr_in cli_addr;
 	int val=1;
 	if (argc!=2)
 	{
@@ -73,30 +72,14 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 	printf("waiting for connection...\n");
-	while (1)
+	unsigned int clilen = sizeof(cli_addr);
+	if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
 	{
-		//printf("...\n");
-		struct sockaddr_in cli_addr;
-		unsigned int clilen = sizeof(cli_addr);
-		if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
-		{
-			printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
-			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			printf("connected\n");
-			echo(newsock,STDOUT_FILENO);
-			if (nread == -1) {
-				printf("Read error");
-				exit(EXIT_FAILURE);
-			}
-
-
-		}
+		printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
+		exit(EXIT_FAILURE);
 	}
-	//echo(STDIN_FILENO, STDOUT_FILENO);
+	printf("connected");
+	echo(STDIN_FILENO, STDOUT_FILENO);
 	close(sfd);
 }
-
 
