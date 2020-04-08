@@ -8,6 +8,7 @@
 
 int main(int argc, char** argv)
 {
+	int c=0;
 	int errno=1;	
 	if (argc != 2)
 		errx(EXIT_FAILURE, "Usage:\n"
@@ -15,13 +16,15 @@ int main(int argc, char** argv)
 
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
-	int sfd;
+	int sfd,newsock;
+	struct sockaddr_in cli_addr;
 	int val=1;
 	if (argc!=2)
 	{
 		printf("usage : %s port\n",argv[0]);
 		exit(EXIT_FAILURE);
 	}
+
 
 	memset(&hints, 0, sizeof(struct addrinfo));
 	hints.ai_family = AF_INET;    /* IPv4 */
@@ -34,10 +37,19 @@ int main(int argc, char** argv)
 	}
 	for (rp = result; rp != NULL; rp = rp->ai_next) 
 	{
-		if ((sfd = socket(rp->ai_family, rp->ai_socktype,rp->ai_protocol)) == -1)
+		c+=1;
+		printf("compteur du for = %d\n",c);
+		printf("flags: 0x%x\tfamily: %d\tsocktype: %d\tprotocol: %d\n",
+				rp->ai_flags,
+				rp->ai_family,
+				rp->ai_socktype,
+				rp->ai_protocol);
+		if ((sfd = socket(rp->ai_family, rp->ai_socktype,0)) == -1)
+		{
+			printf("error opening a socket\n");
 			continue;
-
-		if (setsockopt(sfd, SOL_SOCKET,SO_REUSEADDR,&val,sizeof(1)) == -1)
+		}
+		if (setsockopt(sfd, SOL_SOCKET,SO_REUSEADDR,&val,sizeof(int)) == -1)
 		{
 			printf("setsockopt error\n");
 			exit(EXIT_FAILURE);
@@ -51,7 +63,7 @@ int main(int argc, char** argv)
 	freeaddrinfo(result);
 	if (rp == NULL) 
 	{
-		printf("bind error\n");
+		printf("bid error : %s, error number : %d\n",strerror(errno),errno);
 		exit(EXIT_FAILURE);
 	}
 	if (listen(sfd,5)!=0)
@@ -60,7 +72,8 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 	printf("waiting for connection...\n");
-	if (accept(sfd,rp->ai_addr,&rp->ai_addrlen)<0)
+	unsigned int clilen = sizeof(cli_addr);
+	if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
 	{
 		printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
 		exit(EXIT_FAILURE);
