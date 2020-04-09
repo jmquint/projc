@@ -8,7 +8,6 @@
 
 int main(int argc, char** argv)
 {
-	int c=0;
 	int errno=1;	
 	if (argc != 2)
 		errx(EXIT_FAILURE, "Usage:\n"
@@ -17,7 +16,6 @@ int main(int argc, char** argv)
 	struct addrinfo hints;
 	struct addrinfo *result, *rp;
 	int sfd,newsock;
-	struct sockaddr_in cli_addr;
 	int val=1;
 	if (argc!=2)
 	{
@@ -37,8 +35,6 @@ int main(int argc, char** argv)
 	}
 	for (rp = result; rp != NULL; rp = rp->ai_next) 
 	{
-		c+=1;
-		printf("compteur du for = %d\n",c);
 		printf("flags: 0x%x\tfamily: %d\tsocktype: %d\tprotocol: %d\n",
 				rp->ai_flags,
 				rp->ai_family,
@@ -63,7 +59,7 @@ int main(int argc, char** argv)
 	freeaddrinfo(result);
 	if (rp == NULL) 
 	{
-		printf("bid error : %s, error number : %d\n",strerror(errno),errno);
+		printf("bind error : %s, error number : %d\n",strerror(errno),errno);
 		exit(EXIT_FAILURE);
 	}
 	if (listen(sfd,5)!=0)
@@ -71,15 +67,40 @@ int main(int argc, char** argv)
 		printf("listen error\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("waiting for connection...\n");
-	unsigned int clilen = sizeof(cli_addr);
-	if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
+	while (1)
 	{
-		printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
-		exit(EXIT_FAILURE);
+		
+		printf("waiting for connection...\n");
+		struct sockaddr_in cli_addr;
+		unsigned int clilen = sizeof(cli_addr);
+		if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
+		{
+			printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
+			exit(EXIT_FAILURE);
+		}
+		else
+		{
+			if ( fork() == 0 )
+			{
+				close(sfd);
+				printf("new connection to %d\n",getpid());
+				echo(newsock,newsock);
+				close(newsock);
+				printf("close connection %d\n",getpid());
+				continue;
+			}
+			else if (fork()>0)
+			{
+				close(newsock);
+				continue;
+			}
+			else
+			{
+				printf("fork error\n");
+				exit(EXIT_FAILURE);
+			}
+		}
+		close(sfd);
 	}
-	printf("connected");
-	echo(STDIN_FILENO, STDOUT_FILENO);
-	close(sfd);
-}
 
+}

@@ -67,20 +67,23 @@ int main(int argc, char** argv)
 		printf("listen error\n");
 		exit(EXIT_FAILURE);
 	}
-	printf("waiting for connection...\n");
-	struct sockaddr_in cli_addr;
-	unsigned int clilen = sizeof(cli_addr);
-	if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
+	while (1)
 	{
-		printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
-		exit(EXIT_FAILURE);
+		printf("waiting for connection...\n");
+		struct sockaddr_in cli_addr;
+		unsigned int clilen = sizeof(cli_addr);
+		if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
+		{
+			printf("accept problem : %s, error number : %d\n",strerror(errno),errno);
+			exit(EXIT_FAILURE);
+		}
+		else
+		{
+			printf("connected\n");
+			echo(newsock,newsock);
+		}
+		close(newsock);
 	}
-	else
-	{
-		printf("connected\n");
-		echo(newsock,newsock);
-	}
-	close(newsock);
 	close(sfd);
 }
 
