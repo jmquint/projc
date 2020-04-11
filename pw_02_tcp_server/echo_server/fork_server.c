@@ -3,8 +3,19 @@
 #include <string.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <signal.h>
 #include <err.h>
 #include "echo.h"
+
+
+void func(int sig)
+{
+	pid_t cpid;
+	int cstatus;
+	cpid=wait(&cstatus);
+	printf("received signal : %d\npid : %d, terminated with status : %d\n",sig,cpid,cstatus);
+}
 
 int main(int argc, char** argv)
 {
@@ -67,10 +78,12 @@ int main(int argc, char** argv)
 		printf("listen error\n");
 		exit(EXIT_FAILURE);
 	}
+	pid_t forkstatus; 
+	printf("waiting for connection...\n");
+	signal(SIGCHLD,func);
 	while (1)
 	{
-		
-		printf("waiting for connection...\n");
+
 		struct sockaddr_in cli_addr;
 		unsigned int clilen = sizeof(cli_addr);
 		if ((newsock=accept(sfd,(struct sockaddr *)&cli_addr,&clilen)) == -1)
@@ -80,16 +93,18 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			if ( fork() == 0 )
+			forkstatus=fork();
+			if ( forkstatus == 0 )
 			{
 				close(sfd);
 				printf("new connection to %d\n",getpid());
 				echo(newsock,newsock);
 				close(newsock);
 				printf("close connection %d\n",getpid());
-				continue;
+				printf("waiting for more connections...\n");
+				exit(0);
 			}
-			else if (fork()>0)
+			else if (forkstatus>0)
 			{
 				close(newsock);
 				continue;

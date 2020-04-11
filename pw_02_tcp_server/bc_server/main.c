@@ -98,7 +98,11 @@ int main(int argc, char** argv)
 			{
 				close(sfd);
 				printf("new connection to %d\n",getpid());
-				dup2(execlp("bc","bc",NULL,NULL),newsock);
+				dup2(newsock,STDOUT_FILENO);
+				dup2(newsock,STDIN_FILENO);
+				dup2(newsock,STDERR_FILENO);
+				printf("je suis le serveur\n");
+				execlp("bc","bc",NULL);
 				close(newsock);
 				printf("close connection %d\n",getpid());
 				printf("waiting for more connections...\n");
