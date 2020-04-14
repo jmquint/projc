@@ -37,27 +37,16 @@ int main(int argc, char** argv)
 	//   You can use err(3), but the 'errno' variable is not set automatically.
 	//   You have to set it manually to the return value of pthread_create().
 	long i;
-	char s[256]="";
+	char s[2][64]={"Hello from an even thread.","Hi from an odd thread."};
 	for (i=0;i<number;i++)
 	{
-		if (i%2==0)
-		{
-			printf("even\n");
-			strcpy(s,"Hello from an even thread.");
-		}
-		else
-		{
-			printf("odd\n");
-			strcpy(s,"Hi from an odd thread.");
-		}
 
-		if (pthread_create(&thread[i],NULL,fn_thread,s)!=0)
+		if (pthread_create(&thread[i],NULL,fn_thread,s[i%2])!=0)
 		{
 			printf("error creating\n");
 			exit(1);
 		}
 	}
-
 	// - Wait for the threads to end.
 	for (i=0;i<number;i++)
 	{
@@ -67,7 +56,7 @@ int main(int argc, char** argv)
 			exit(1);
 		}
 	}
-	
+
 	// - Return from the function.
 	return 0;
 }
