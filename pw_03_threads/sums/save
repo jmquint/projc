@@ -111,16 +111,8 @@ int main(int argc, char **argv)
 	{
 		data[i].id=i;
 		printf("id = %ld\n",data[i].id);
-		if (i==thread_number-1)
-		{
-			data[i].size=last_chunk_size;
-		}
-		else 
-		{
-			data[i].size=chunk_size;
-		}
-		data[i].start=*(data[i].start+(i*data[i].size));
-
+		data[i].size=chunk_size;
+		data[i].start=malloc(chunk_size*sizeof(long));
 		//data[i]->sum=first_sum;
 		printf("creating one thread\n");	
 		//printf("d = %d, p = %p, s = %s\n",data[i].start,data[i].start,data[i].start);
@@ -128,6 +120,16 @@ int main(int argc, char **argv)
 		printf("id before send = %ld\n",data[i].id);
 		pthread_create(&thread[i],NULL,worker,(void *)&data[i]);
 	}
+	i=thread_number-1;
+	data[i].id=i;
+	printf("id = %ld\n",data[i].id);
+	data[i].size=last_chunk_size;
+	data[i].start=malloc(chunk_size*sizeof(long));
+	//data[i]->sum=first_sum;
+	printf("creating last thread\n");
+	//printf("d = %d, p = %p, s = %s\n",data[i].start,data[i].start,data[i].start);
+	printf("id before send = %ld\n",data[i].id);
+	pthread_create(&thread[i],NULL,worker,(void *)&data[i]);
 	
 	unsigned long *final_sum;
 	
