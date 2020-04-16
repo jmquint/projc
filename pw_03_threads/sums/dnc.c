@@ -21,7 +21,7 @@ unsigned long linear_sum(unsigned char *start, long size)
 	int i;
 	for (i=0;i<size;i++)
 	{
-		result=result + 1;
+		result=result + (int)(*start);
 		start++;
 	}
 	return result;
@@ -30,18 +30,40 @@ unsigned long linear_sum(unsigned char *start, long size)
 unsigned long dnc_sum(unsigned char *start, long size, long threshold)
 {
 	if (size<=treshold)
-		return linear_sum(*start,size);
-	struct thread_data data;
-	data.start=*start;
-	data.size=size;
-	data.treshold=treshold;
-	if (pthread_create(&thread[i],NULL,worker,data)!=0)
+		return linear_sum(start,size);
+
+	int size1=size/2;
+	int size2=size-size1;
+	int mid=size-size1;
+	unsigned long s1, s2;
+
+	struct thread_data *data1;
+	data->start=start;
+	data->size=size1;
+	data->treshold=treshold;
+
+	struct thread_data *data2;
+	data->start=mid;
+	data->size=size2;
+	data->treshold=treshold;
+
+	pthread_t thr1;	
+
+	if (pthread_create(&thr1,NULL,worker,data)!=0)
 	{
-		printf("error creating\n");
+		printf("create error\n");
 		exit(1);
 	}
 
+	s2=(unsigned long)(worker(data2));
 
+	if (pthread_join(&thr1,&s1)!=0)
+	{
+		printf("join error\n");
+		exit(1);
+	}
+
+	return (s1+s2);
 }
 
 // Counter of threads.
@@ -59,6 +81,11 @@ void * worker(void *arg)
 	//   (It may execute recursively another thread.)
 	// - Store the result in the 'sum' field.
 	// - Return from the function.
+
+	struct thread_data *rdata=arg;
+	unsigned long sum=dnc_sum(rdata->start,rdata->size,rdata->treshold);
+	return sum;
+	
 }
 
 int main(int argc, char **argv)

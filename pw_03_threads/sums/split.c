@@ -24,7 +24,7 @@ unsigned long linear_sum(unsigned char *start, long size)
 	int i;
 	for (i=0;i<size;i++)
 	{
-		result=result + 1;
+		result=result + (int)(*start);
 		start++;
 	}
 	return result;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 	printf("Initializing array........");
 	fflush(stdout);
 	for (long i = 0; i < array_size; i++)
-		bytes[i] = 1;
+		bytes[i] =1 ;
 	printf("OK\n");
 #endif
 
@@ -97,7 +97,6 @@ int main(int argc, char **argv)
 	long chunk_size=(array_size/thread_number);
 	long last_chunk_size=chunk_size+(array_size-(thread_number*chunk_size));
 	long i;
-	//unsigned long *first_sum=0;
 	pthread_t thread[thread_number];
 	
 	
@@ -112,8 +111,7 @@ int main(int argc, char **argv)
 		{
 			data[i].size=chunk_size;
 		}
-		data[i].start=malloc(data[i].size*sizeof(long));
-
+		data[i].start=&(bytes[i*chunk_size]);
 		pthread_create(&thread[i],NULL,worker,(void *)&data[i]);
 	}
 	void *final_sum;
