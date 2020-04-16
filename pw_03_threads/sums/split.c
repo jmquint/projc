@@ -5,7 +5,7 @@
 #include <err.h>
 
 
-#define INITIALIZE_ARRAY
+//#define INITIALIZE_ARRAY
 struct thread_data
 {
 	long id;                    // Thread ID.
@@ -20,16 +20,13 @@ struct thread_data
 // 'size' is the number of elements of the array.
 unsigned long linear_sum(unsigned char *start, long size)
 {
-	printf("entering linear_sum\n");
 	unsigned long result=0;
 	int i;
 	for (i=0;i<size;i++)
 	{
-		printf("result = %ld\n",result);
 		result=result + 1;
 		start++;
 	}
-	printf("closing linear_sum\n");
 	return result;
 
 }
@@ -42,12 +39,9 @@ void * worker(void *arg)
 	// - Store the result in the 'sum' field.
 	// - Print the thread ID and the result.
 	// - Return from the function.
-	printf("entering worker\n");
 	struct thread_data *thdata=arg;
-	printf("woker id = %ld\n",thdata->id);
+	printf("Thread %02ld: %ld\n",thdata->id,thdata->size);
 	thdata->sum=linear_sum(thdata->start,thdata->size);
-	printf("thread id = %ld, result = %ld\n",thdata->id,thdata->sum);
-	printf("closing worker\n");
 	pthread_exit((void *)thdata->sum);
 }
 
@@ -107,45 +101,35 @@ int main(int argc, char **argv)
 	pthread_t thread[thread_number];
 	
 	
-	for (i=0;i<(thread_number-1);i++)
+	for (i=0;i<thread_number;i++)
 	{
 		data[i].id=i;
-		printf("id = %ld\n",data[i].id);
 		if (i==thread_number-1)
 		{
 			data[i].size=last_chunk_size;
 		}
-		else 
+		else
 		{
 			data[i].size=chunk_size;
 		}
-		data[i].start=*(data[i].start+(i*data[i].size));
+		data[i].start=malloc(data[i].size*sizeof(long));
 
-		//data[i]->sum=first_sum;
-		printf("creating one thread\n");	
-		//printf("d = %d, p = %p, s = %s\n",data[i].start,data[i].start,data[i].start);
-
-		printf("id before send = %ld\n",data[i].id);
 		pthread_create(&thread[i],NULL,worker,(void *)&data[i]);
 	}
-	
-	unsigned long *final_sum;
+	void *final_sum;
 	
 	long result=0;
 	for (i=0;i<(thread_number);i++)
 	{
-		//printf("td\n");
 		if (pthread_join(thread[i],&final_sum)!=0)
 		{
 			printf("error joining\n");
 			exit(1);
 		}
-		//printf("tm\n");
 		result=result+(unsigned long)final_sum;
-		//printf("tf\n");
 	}
 
-	printf("TOTAL SUM = %ld\n",result);
+	printf("Sum......: %ld\n",result);
 	return 0;
 
 
