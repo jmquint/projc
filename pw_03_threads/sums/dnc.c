@@ -1,4 +1,9 @@
-// TODO: Insert the 'include' directives.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <err.h>
+#include <stdatomic.h>
 
 #define INITIALIZE_ARRAY
 
@@ -18,10 +23,12 @@ struct thread_data
 unsigned long linear_sum(unsigned char *start, long size)
 {
 	unsigned long result=0;
-	int i;
+	long i;
+	printf("LINEAR -- start p= %p, start d= %d\n",start,*start);
+		printf("size= %ld\n",size);
 	for (i=0;i<size;i++)
 	{
-		result=result + (int)(*start);
+		result=result + (long)(*start);
 		start++;
 	}
 	return result;
@@ -29,39 +36,54 @@ unsigned long linear_sum(unsigned char *start, long size)
 
 unsigned long dnc_sum(unsigned char *start, long size, long threshold)
 {
-	if (size<=treshold)
+	printf("testbefore\n");
+	if (size<=threshold)
+	{
+		printf("IFTEST -- start p= %p, start d= %d\n",start,*start);
+		printf("size= %ld\n",size);
 		return linear_sum(start,size);
+	}
+		printf("testdebut\n");
 
-	int size1=size/2;
-	int size2=size-size1;
-	int mid=size-size1;
+	long size1=(size)/2;
+	long size2=size-size1;
+	long mid=(long)start+size1;
 	unsigned long s1, s2;
+	void * work_result;
+	
+	printf("START -- start p= %p, start d= %d\n",start,*start);
 
-	struct thread_data *data1;
-	data->start=start;
-	data->size=size1;
-	data->treshold=treshold;
-
-	struct thread_data *data2;
-	data->start=mid;
-	data->size=size2;
-	data->treshold=treshold;
+	struct thread_data data1;
+	data1.start=start;
+	printf("DATA1 -- start p= %p, start d= %d\n",data1.start,*(data1.start));
+	data1.size=size1;
+	data1.threshold=threshold;
+	
+	struct thread_data data2;
+	data2.start=(unsigned char *)mid;
+	printf("DATA2 -- start p= %p, start d= %d\n",data2.start,*(data2.start));
+	data2.size=size2;
+	data2.threshold=threshold;
 
 	pthread_t thr1;	
 
-	if (pthread_create(&thr1,NULL,worker,data)!=0)
+	if (pthread_create(&thr1,NULL,worker,&data1)!=0)
 	{
 		printf("create error\n");
 		exit(1);
 	}
 
-	s2=(unsigned long)(worker(data2));
+	//s2=linear_sum(data2.start,data2.size);
+	s2=(unsigned long)(dnc_sum(data2.start,data2.size,data2.threshold));
 
-	if (pthread_join(&thr1,&s1)!=0)
+	if (pthread_join(thr1,&work_result)!=0)
 	{
 		printf("join error\n");
 		exit(1);
 	}
+
+	s1=(unsigned long)work_result;
+	printf("THREAD END -- start p= %p, start d= %d, s1= %ld\n",data2.start,*(data2.start),s1);
 
 	return (s1+s2);
 }
@@ -83,8 +105,9 @@ void * worker(void *arg)
 	// - Return from the function.
 
 	struct thread_data *rdata=arg;
-	unsigned long sum=dnc_sum(rdata->start,rdata->size,rdata->treshold);
-	return sum;
+	printf("WORKER CALL __________________________\n");
+	unsigned long sum=dnc_sum(rdata->start,rdata->size,rdata->threshold);
+	return (void *)sum;
 	
 }
 
@@ -120,6 +143,7 @@ int main(int argc, char **argv)
 	for (long i = 0; i < array_size; i++)
 		bytes[i] = 1;
 	printf("OK\n");
+	printf("bytes= %p, bytes[0]= %d\n",bytes,bytes[0]); 
 #endif
 
 	// Print the sum and the number of threads.
